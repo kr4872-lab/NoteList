@@ -1,0 +1,15 @@
+{
+  "notes": [
+    {
+      "title": "сделать дз",
+      "content": "посмотреть видео 1 и 2",
+      "createdAt": "2026-10-13T07:58:31.688Z",
+      "hidden": false,
+      "tags": [
+        "les"
+      ],
+      "id": "JmlgJRvO3I8"
+    }
+  ],
+  "$schema": "./node_modules/json-server/schema.json"
+}
