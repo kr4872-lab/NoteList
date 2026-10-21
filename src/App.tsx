@@ -1,109 +1,137 @@
-import { useEffect, useState } from "react";
-import type { Note, NoteDTO } from "./types";
+import { useState, useEffect } from "react";
+import type { Note, NoteDTO, FilterValues } from "./types";
+import { mapNoteFromDTO } from "./utils";
 import NoteCard from "./NoteCard";
 import CreateNoteForm from "./CreateNoteForm";
+import NoteFilterForm from "./NoteFilterForm";
 
 export default function App() {
   const [notes, setNotes] = useState<Note[]>([]);
 
+  const [filters, setFilters] = useState<FilterValues>({
+    search: "",
+    showHidden: false,
+    sortBy: "newest",
+    searchTags: "",
+  });
+
   useEffect(() => {
     async function fetchNotes() {
       try {
-        const response = await fetch("http://localhost:3000/notes");
+        const params = new URLSearchParams();
 
-        if (!response.ok) {
-          throw new Error("Не удалось загрузить заметки");
+        if (filters.search) params.set("title_like", filters.search);
+
+        if (filters.showHidden === false) {
+          params.set("hidden", "false");
         }
 
+        params.set("_sort", "createdAt");
+        params.set("_order", filters.sortBy === "newest" ? "desc" : "asc");
+
+        if (filters.searchTags.trim()) {
+          const tagsArray = filters.searchTags
+            .split(",")
+            .map((t) => t.trim())
+            .filter((t) => t.length > 0);
+          tagsArray.forEach((tag) => {
+            params.append("tags_like", tag);
+          });
+        }
+
+        const response = await fetch(
+          `http://localhost:3000/notes?${params.toString()}`,
+        );
         const data: NoteDTO[] = await response.json();
 
-        const formattedNotes: Note[] = data.map((note) => ({
-          ...note,
-          createdAt: new Date(note.createdAt),
-        }));
-
-        setNotes(formattedNotes);
-      } catch (err) {
-        console.error("Ошибка при загрузке заметок:", err);
+        setNotes(data.map(mapNoteFromDTO));
+      } catch (error) {
+        console.error("Ошибка загрузки:", error);
       }
     }
-
     fetchNotes();
-  }, []);
+  }, [filters]);
 
-  async function handleSummit(noteData: Omit<Note, "id">) {
+  const handleNoteSubmit = async (note: Omit<NoteDTO, "id">) => {
     try {
       const response = await fetch("http://localhost:3000/notes", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          ...noteData,
-          createdAt: noteData.createdAt.toISOString(),
-        }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(note),
       });
 
-      if (!response.ok) {
-        throw new Error("Не удалось создать заметку");
+      const res: NoteDTO = await response.json();
+
+      if (filters.sortBy === "newest") {
+        setNotes((prev) => [mapNoteFromDTO(res), ...prev]);
+      } else {
+        setNotes((prev) => [...prev, mapNoteFromDTO(res)]);
       }
-
-      const createdNoteDTO: NoteDTO = await response.json();
-
-      const newNote: Note = {
-        ...createdNoteDTO,
-        createdAt: new Date(createdNoteDTO.createdAt),
-      };
-
-      setNotes((prevNotes) => [...prevNotes, newNote]);
-    } catch (err) {
-      console.error("Ошибка при создании заметки:", err);
+    } catch (error) {
+      console.error("Ошибка сохранения:", error);
     }
-  }
+  };
 
-  async function handleDelete(id: number) {
+  const handleDeleteNote = async (id: string) => {
     try {
-      const response = await fetch(`http://localhost:3000/notes/${id}`, {
-        method: "DELETE",
-      });
-
-      if (!response.ok) {
-        throw new Error("The note could not be deleted.");
-      }
-
+      await fetch(`http://localhost:3000/notes/${id}`, { method: "DELETE" });
       setNotes((prevNotes) => prevNotes.filter((note) => note.id !== id));
-    } catch (err) {
-      console.error("Ошибка при удалении заметки:", err);
+    } catch (error) {
+      console.error("Ошибка при удалении:", error);
     }
-  }
+  };
 
   return (
     <div
       style={{
-        background: "#f6f8fa",
-        minHeight: "100vh",
-        padding: "40px 20px",
-        fontFamily:
-          '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+        maxWidth: "600px",
+        margin: "40px auto",
+        fontFamily: "sans-serif",
       }}
     >
-      <div style={{ maxWidth: "600px", margin: "0 auto" }}>
-        <h1
+      <h2>Менеджер заметок</h2>
+
+      <CreateNoteForm onSubmit={handleNoteSubmit} />
+      <hr
+        style={{
+          margin: "20px 0",
+          border: "none",
+          borderTop: "1px solid #eee",
+        }}
+      />
+
+      <NoteFilterForm filters={filters} setFilters={setFilters} />
+
+      {notes.length === 0 ? (
+        <div
           style={{
             textAlign: "center",
-            color: "#24292e",
-            marginBottom: "24px",
+            padding: "50px 20px",
+            color: "#888",
+            background: "#fafafa",
+            borderRadius: "8px",
+            marginTop: "20px",
           }}
         >
-          Мои заметки
-        </h1>
-        <CreateNoteForm onSubmit={handleSummit} />
-        <div>
+          <h3 style={{ margin: "0 0 10px 0" }}>Заметки не найдены 🕵️‍♂️</h3>
+          <p style={{ margin: 0, fontSize: "14px" }}>
+            Попробуйте изменить параметры фильтрации или создайте новую заметку.
+          </p>
+        </div>
+      ) : (
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: "15px",
+            marginTop: "20px",
+          }}
+        >
           {notes.map((note) => (
-            <NoteCard key={note.id} note={note} onDelete={handleDelete} />
+            <NoteCard key={note.id} note={note} onDelete={handleDeleteNote} />
           ))}
         </div>
-      </div>
+      )}
     </div>
   );
 }

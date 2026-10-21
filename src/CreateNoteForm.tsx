@@ -1,105 +1,63 @@
-import { useState } from "react";
-import type { Note } from "./types";
+import { useForm, type SubmitHandler } from "react-hook-form";
+import type { NoteDTO, CreateNoteFormValues } from "./types";
 
-interface CreateNoteFormProps {
-  onSubmit: (note: Omit<Note, "id">) => void;
+interface Props {
+  onSubmit: (note: Omit<NoteDTO, "id">) => void;
 }
 
-export default function CreateNoteForm({ onSubmit }: CreateNoteFormProps) {
-  const [title, setTitle] = useState("");
-  const [content, setContent] = useState("");
-  const [hidden, setHidden] = useState(false);
-  const [tags, setTags] = useState("");
+export default function CreateNoteForm({ onSubmit }: Props) {
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<CreateNoteFormValues>({
+    defaultValues: {
+      title: "",
+      content: "",
+      tags: "",
+      hidden: false,
+    },
+  });
 
-  const [titleError, setTitleError] = useState("");
-  const [contentError, setContentError] = useState("");
-  const [tagsError, setTagsError] = useState("");
-
-  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-
-    setTitleError("");
-    setContentError("");
-    setTagsError("");
-
-    let hasError = false;
-
-    const currentTitle = title.trim();
-    if (currentTitle.length === 0) {
-      setTitleError("Title is required");
-      hasError = true;
-    }
-
-    const currentContent = content.trim();
-    if (currentContent.length === 0) {
-      setContentError("Content is required");
-      hasError = true;
-    }
-
-    const currentTags = tags
+  const handleFormSubmit: SubmitHandler<CreateNoteFormValues> = (data) => {
+    const tags = data.tags
       .split(",")
       .map((tag) => tag.trim())
       .filter((tag) => tag.length > 0);
 
-    if (currentTags.length > 5) {
-      setTagsError("You can only add up to 5 tags");
-      hasError = true;
-    }
+    const note: Omit<NoteDTO, "id"> = {
+      title: data.title.trim(),
+      content: data.content.trim(),
+      tags: tags,
+      createdAt: new Date().toISOString(),
+      hidden: data.hidden,
+    };
 
-    if (hasError) {
-      return;
-    }
-
-    onSubmit({
-      title: currentTitle,
-      content: currentContent,
-      createdAt: new Date(),
-      hidden,
-      tags: currentTags,
-    });
-
-    setTitle("");
-    setContent("");
-    setHidden(false);
-    setTags("");
-  }
+    onSubmit(note);
+    reset();
+  };
 
   return (
     <form
-      onSubmit={handleSubmit}
-      style={{
-        background: "#ffffff",
-        padding: "20px",
-        borderRadius: "8px",
-        border: "1px solid #e1e4e8",
-        boxShadow: "0 2px 4px rgba(0,0,0,0.04)",
-        marginBottom: "24px",
-        display: "flex",
-        flexDirection: "column",
-        gap: "12px",
-      }}
+      onSubmit={handleSubmit(handleFormSubmit)}
+      style={{ display: "flex", flexDirection: "column", gap: "10px" }}
     >
-      <h3 style={{ margin: "0 0 4px 0", color: "#24292e" }}>
-        Создать новую заметку
-      </h3>
-
       <div>
         <input
-          type="text"
           placeholder="Title"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          style={{
-            width: "100%",
-            padding: "10px",
-            borderRadius: "6px",
-            border: "1px solid #d1d5db",
-            boxSizing: "border-box",
-          }}
+          {...register("title", {
+            required: "Title is required",
+            minLength: {
+              value: 4,
+              message: "Title must be at least 4 characters",
+            },
+          })}
+          style={{ width: "100%", padding: "8px" }}
         />
-        {titleError && (
-          <p style={{ color: "#d73a49", fontSize: "12px", margin: "4px 0 0" }}>
-            {titleError}
+        {errors.title && (
+          <p style={{ color: "red", margin: "5px 0 0 0", fontSize: "14px" }}>
+            {errors.title.message}
           </p>
         )}
       </div>
@@ -107,76 +65,46 @@ export default function CreateNoteForm({ onSubmit }: CreateNoteFormProps) {
       <div>
         <textarea
           placeholder="Content"
-          value={content}
-          onChange={(e) => setContent(e.target.value)}
-          style={{
-            width: "100%",
-            padding: "10px",
-            borderRadius: "6px",
-            border: "1px solid #d1d5db",
-            minHeight: "80px",
-            boxSizing: "border-box",
-          }}
+          {...register("content", { required: "Content is required" })}
+          style={{ width: "100%", padding: "8px", minHeight: "60px" }}
         />
-        {contentError && (
-          <p style={{ color: "#d73a49", fontSize: "12px", margin: "4px 0 0" }}>
-            {contentError}
+        {errors.content && (
+          <p style={{ color: "red", margin: "5px 0 0 0", fontSize: "14px" }}>
+            {errors.content.message}
           </p>
         )}
       </div>
 
       <div>
         <input
-          type="text"
           placeholder="Tags (comma separated)"
-          value={tags}
-          onChange={(e) => setTags(e.target.value)}
-          style={{
-            width: "100%",
-            padding: "10px",
-            borderRadius: "6px",
-            border: "1px solid #d1d5db",
-            boxSizing: "border-box",
-          }}
+          {...register("tags", {
+            validate: (value) => {
+              const tagsArray = value
+                .split(",")
+                .map((t) => t.trim())
+                .filter((t) => t.length > 0);
+              if (tagsArray.length > 5) return "You can only add up to 5 tags";
+              return true;
+            },
+          })}
+          style={{ width: "100%", padding: "8px" }}
         />
-        {tagsError && (
-          <p style={{ color: "#d73a49", fontSize: "12px", margin: "4px 0 0" }}>
-            {tagsError}
+        {errors.tags && (
+          <p style={{ color: "red", margin: "5px 0 0 0", fontSize: "14px" }}>
+            {errors.tags.message}
           </p>
         )}
       </div>
 
-      <label
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: "8px",
-          cursor: "pointer",
-          fontSize: "14px",
-          color: "#4b5563",
-        }}
-      >
-        <input
-          type="checkbox"
-          checked={hidden}
-          onChange={(e) => setHidden(e.target.checked)}
-          style={{ width: "16px", height: "16px" }}
-        />
+      <label style={{ display: "flex", alignItems: "center", gap: "5px" }}>
+        <input type="checkbox" {...register("hidden")} />
         Hidden
       </label>
 
       <button
         type="submit"
-        style={{
-          background: "#2ea44f",
-          color: "white",
-          border: "none",
-          padding: "10px 16px",
-          borderRadius: "6px",
-          fontWeight: "600",
-          cursor: "pointer",
-          transition: "background 0.2s",
-        }}
+        style={{ padding: "8px", background: "#24292e", color: "white" }}
       >
         Add Note
       </button>

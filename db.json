@@ -1,14 +1,83 @@
 {
   "notes": [
     {
-      "title": "сделать дз",
-      "content": "посмотреть видео 1 и 2",
-      "createdAt": "2026-10-13T07:58:31.688Z",
+      "title": "note 1",
+      "content": "python",
+      "createdAt": "2026-10-14T14:38:16.057Z",
       "hidden": false,
       "tags": [
-        "les"
+        "python",
+        "proga"
       ],
-      "id": "JmlgJRvO3I8"
+      "id": "AmIPPhXNyLo"
+    },
+    {
+      "title": "note 2",
+      "content": "js",
+      "createdAt": "2026-10-18T13:43:35.354Z",
+      "hidden": true,
+      "tags": [
+        "proga",
+        "js",
+        "react"
+      ],
+      "id": "imBq6HaA09c"
+    },
+    {
+      "title": "hgfc",
+      "content": "vcvx",
+      "createdAt": "2026-10-20T16:57:39.389Z",
+      "hidden": true,
+      "tags": [],
+      "id": "sINI2H-cZR0"
+    },
+    {
+      "title": "xxxx",
+      "content": "x",
+      "createdAt": "2026-10-20T16:57:54.142Z",
+      "hidden": false,
+      "tags": [
+        "2",
+        "3"
+      ],
+      "id": "OspIzIUTUXo"
+    },
+    {
+      "title": "csdfs",
+      "content": "cv",
+      "tags": [
+        "в"
+      ],
+      "createdAt": "2026-10-20T21:22:05.257Z",
+      "hidden": false,
+      "id": "YA9UuT1uozs"
+    },
+    {
+      "title": "xvxc",
+      "content": "vx",
+      "tags": [
+        "xv"
+      ],
+      "createdAt": "2026-10-20T21:22:13.962Z",
+      "hidden": true,
+      "id": "xv2q0bdUqPs"
+    },
+    {
+      "title": "xvvx",
+      "content": "xxc",
+      "tags": [
+        "xc"
+      ],
+      "createdAt": "2026-10-20T21:22:36.808Z",
+      "hidden": false,
+      "id": "Q2dlYMH2Azo"
+    }
+  ],
+  "users": [
+    {
+      "id": "1",
+      "email": "test@mail.ru",
+      "password": "123"
     }
   ],
   "$schema": "./node_modules/json-server/schema.json"

@@ -1,12 +1,12 @@
 import type { Note, NoteDTO } from "./types";
 
-export function mapNoteFromDTO(dto: NoteDTO): Note {
+export function mapNoteFromDTO(note: NoteDTO): Note {
   return {
-    id: dto.id,
-    title: dto.title,
-    content: dto.content,
-    createdAt: new Date(dto.createdAt),
-    hidden: dto.hidden,
-    tags: dto.tags,
+    id: note.id,
+    title: note.title,
+    content: note.content,
+    createdAt: new Date(note.createdAt),
+    hidden: note.hidden,
+    tags: note.tags,
   };
 }
